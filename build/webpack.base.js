@@ -1,14 +1,25 @@
+/*
+ * @Author: WuDaoTingFeng.yzh 2683849644@qq.com
+ * @Date: 2024-01-09 16:49:36
+ * @LastEditors: WuDaoTingFeng.yzh 2683849644@qq.com
+ * @LastEditTime: 2024-01-10 13:58:41
+ * @FilePath: \webpack5_vue\build\webpack.base.js
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 // webpack.base.js 基础配置
 
 const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const WebpackBar = require("webpackbar");
+const isDev = process.env.NODE_ENV === "development"; // 是否是开发模式
 module.exports = {
   entry: path.join(__dirname, "../src/index.js"), // 入口文件
   // 打包出口文件
   output: {
-    filename: "static/js/[name].js", // 每个输出js的名称
+    filename: "static/js/[name].[chunkhash:8].js", // 每个输出js的名称
     path: path.join(__dirname, "../dist"), // 打包结果输出路劲
     clean: true, //webpack4需要配置clean-webpack-plugin来删除dist文件,webpack5内置了
     publicPath: "/", //打包后文件的公共前缀路径
@@ -18,22 +29,82 @@ module.exports = {
       // 匹配.vue文件
       {
         test: /\.vue$/,
-        use: "vue-loader", // 用vue-loader去解析vue文件
+        include: [path.resolve(__dirname, "../src")], // 只对项目src文件的vue进行loader解析
+        use: ["thread-loader", "vue-loader"], // 用vue-loader去解析vue文件
       },
       // 匹配.ts文件
       {
         test: /\.ts$/,
-        use: "babel-loader",
+        include: [path.resolve(__dirname, "../src")], // 只对项目src文件的ts进行loader解析
+        use: ["thread-loader", "babel-loader"],
       },
       // js文件配置
       {
-        test: /.(js)$/,
-        use: "babel-loader",
+        test: /.js$/,
+        include: [path.resolve(__dirname, "../src")], // 只对项目src文件的js进行loader解析
+        use: ["thread-loader", "babel-loader"],
       },
-      //匹配 css  scss|sass 文件
+
       {
-        test: /\.(css|s[ca]ss)$/,
-        use: ["style-loader", "css-loader", "postcss-loader", "sass-loader"],
+        test: /\.css$/, //匹配所有的 css 文件
+        include: [path.resolve(__dirname, "../src")],
+        use: [
+          // 开发环境使用style-looader,打包模式抽离css
+          isDev ? "style-loader" : MiniCssExtractPlugin.loader,
+          "css-loader",
+          "postcss-loader",
+        ],
+      },
+      {
+        test: /\.s[ca]ss$/, //匹配所有的 scss 文件
+        include: [path.resolve(__dirname, "../src")],
+        use: [
+          // 开发环境使用style-looader,打包模式抽离css
+          isDev ? "style-loader" : MiniCssExtractPlugin.loader,
+          "css-loader",
+          "postcss-loader",
+          "sass-loader",
+        ],
+      },
+
+      // 匹配图片文件
+      {
+        test: /.(png|jpg|jpeg|gif|svg)$/,
+        type: "asset", // type选择asset
+        parser: {
+          dataUrlCondition: {
+            maxSize: 10 * 1024, // 小于10kb转base64位
+          },
+        },
+        generator: {
+          filename: "static/images/[name].[contenthash:8][ext]", // 文件输出目录和命名
+        },
+      },
+      // 匹配字体图标文件
+      {
+        test: /.(woff2?|eot|ttf|otf)$/,
+        type: "asset", // type选择asset
+        parser: {
+          dataUrlCondition: {
+            maxSize: 10 * 1024, // 小于10kb转base64位
+          },
+        },
+        generator: {
+          filename: "static/fonts/[name].[contenthash:8][ext]", // 文件输出目录和命名
+        },
+      },
+      // 匹配媒体文件
+      {
+        test: /.(mp4|webm|ogg|mp3|wav|flac|aac)$/,
+        type: "asset", // type选择asset
+        parser: {
+          dataUrlCondition: {
+            maxSize: 10 * 1024, // 小于10kb转base64位
+          },
+        },
+        generator: {
+          filename: "static/media/[name].[contenthash:8][ext]", // 文件输出目录和命名
+        },
       },
     ],
   },
@@ -46,9 +117,23 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env.BASE_ENV": JSON.stringify(process.env.BASE_ENV),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+      __VUE_OPTIONS_API__: false,
+      __VUE_PROD_DEVTOOLS__: false,
     }),
+    new WebpackBar(),
+
   ],
   resolve: {
     extensions: [".vue", ".ts", ".js", ".json"],
+    // 如果用的是pnpm 就暂时不要配置这个，会有幽灵依赖的问题，访问不到很多模块。
+    // 查找第三方模块只在本项目的node_modules中查找
+    modules: [path.resolve(__dirname, "../node_modules")],
+    alias: {
+      "@": path.join(__dirname, "../src"),
+    },
   },
+  cache: {
+    type: "filesystem", // 使用文件缓存
+  },
+  stats: "errors-warnings",
 };

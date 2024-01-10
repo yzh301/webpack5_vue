@@ -1,29 +1,57 @@
 {
   "compilerOptions": {
+    /* 指定 ECMAScript 目标版本 */
     "target": "ES2020",
+    /* 启用 ECMAScript 类字段声明 */
     "useDefineForClassFields": true,
+    /* 指定模块代码生成 */
     "module": "ESNext",
+    /* 包含用于浏览器和 DOM 相关特性的 DOM 和 DOM.Iterable */
     "lib": [
       "ES2020",
       "DOM",
       "DOM.Iterable"
     ],
+    /* 跳过对所有声明文件的类型检查 */
     "skipLibCheck": true,
-    /* Bundler mode */
+    /* 指定捆绑的模块解析策略 */
     "moduleResolution": "bundler",
+    /* 允许导入带有 .ts 扩展名的 TypeScript 文件 */
     "allowImportingTsExtensions": true,
+    /* 启用 JSON 模块的解析 */
     "resolveJsonModule": true,
+    /* 确保所有模块都是隔离的 */
     "isolatedModules": true,
+    /* 不生成输出文件（仅用于检查） */
     "noEmit": true,
+    /* 指定 JSX 文件扩展名并保留 JSX 输出 */
     "jsx": "preserve",
-    /* Linting */
+    /* 启用严格的类型检查 */
     "strict": true,
+    /* 报告未使用的局部变量和参数的错误 */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    /* 报告 switch 语句中的落空情况 */
+    "noFallthroughCasesInSwitch": true,
+    /* 设置模块解析的基本目录 */
+    "baseUrl": ".",
+    /* 指定路径别名以便更容易导入 */
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
+    /* 在 src 目录中包括 JavaScript 和 Vue 文件 */
     "src/**/*.js",
+    "src/**/*.jsx",
     "src/**/*.vue"
   ],
+  "exclude": [
+    /* 排除 node_modules 以及任何构建输出目录 */
+    "node_modules",
+    "dist",
+    "build"
+  ]
 }
