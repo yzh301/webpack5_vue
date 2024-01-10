@@ -2,7 +2,7 @@
  * @Author: WuDaoTingFeng.yzh 2683849644@qq.com
  * @Date: 2024-01-09 16:49:36
  * @LastEditors: WuDaoTingFeng.yzh 2683849644@qq.com
- * @LastEditTime: 2024-01-10 13:58:41
+ * @LastEditTime: 2024-01-10 17:23:41
  * @FilePath: \webpack5_vue\build\webpack.base.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -14,7 +14,10 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const WebpackBar = require("webpackbar");
-const isDev = process.env.NODE_ENV === "development"; // 是否是开发模式
+const Components = require("unplugin-vue-components/webpack");
+const { ElementPlusResolver } = require("unplugin-vue-components/resolvers");
+const AutoImport = require("unplugin-auto-import/webpack");
+const isDev = process.env.NODE_ENV === "development"; // 是否是开发模式/*  */
 module.exports = {
   entry: path.join(__dirname, "../src/index.js"), // 入口文件
   // 打包出口文件
@@ -48,6 +51,7 @@ module.exports = {
       {
         test: /\.css$/, //匹配所有的 css 文件
         include: [path.resolve(__dirname, "../src")],
+        exclude: ["/node_modules/element-plus/dist"],
         use: [
           // 开发环境使用style-looader,打包模式抽离css
           isDev ? "style-loader" : MiniCssExtractPlugin.loader,
@@ -121,7 +125,58 @@ module.exports = {
       __VUE_PROD_DEVTOOLS__: false,
     }),
     new WebpackBar(),
+    Components.default({
+      // 自定义组件的解析器
+      resolvers: [ElementPlusResolver()],
+      // 要搜索组件的目录的相对路径
+      dirs: ["src/components"],
+      // 组件的有效文件扩展名。
+      extensions: ["vue", ".ts", ".js", ".mjs"],
+      // 搜索子目录
+      deep: true,
 
+      // 生成 `components.d.ts` 全局声明，
+      // 也接受自定义文件名的路径
+      dts: "src/assets/type/components.d.ts",
+      // 允许子目录作为组件的命名空间前缀。
+      directoryAsNamespace: false,
+      // 忽略命名空间前缀的子目录路径
+      // 当`directoryAsNamespace: true` 时有效
+      globalNamespaces: [],
+      // 自动导入指令
+      // 默认值：Vue 3 的`true`，Vue 2 的`false`
+      // 需要 Babel 来为 Vue 2 进行转换，出于性能考虑，它默认处于禁用状态。
+      directives: true,
+      include: [/.vue$/, /\.vue\?vue/, /\.md$/, /\.tsx?$/, /\.jsx?$/], // 添加对 tsx 和 jsx 文件的支持
+      exclude: [/[\/]node_modules[\/]/, /[\/].git[\/]/, /[\/].nuxt[\/]/],
+    }),
+    AutoImport.default({
+      // targets to transform
+      include: [
+        /\.tsx?$/, // 添加对 tsx 文件的支持
+        /\.jsx?$/,
+        /\.vue$/,
+        /\.vue\?vue/,
+        /\.md$/,
+      ],
+
+      // global imports to register
+      imports: [
+        // presets
+        "vue",
+        "vue-router",
+        // custom
+      ],
+      dts: "src/assets/type/auto-import.d.ts",
+
+      // custom resolvers
+      // 可以在这自定义自己的东西，比如接口api的引入，工具函数等等
+      // see https://github.com/antfu/unplugin-auto-import/pull/23/
+      resolvers: [
+        /* ... */
+        ElementPlusResolver(),
+      ],
+    }),
   ],
   resolve: {
     extensions: [".vue", ".ts", ".js", ".json"],
